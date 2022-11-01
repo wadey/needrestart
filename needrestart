@@ -102,6 +102,8 @@ Usage:
     -f <fe>	override debconf frontend (DEBIAN_FRONTEND, debconf(7))
     -t <seconds> tolerate interpreter process start times within this value
     -u <ui>     use preferred UI package (-u ? shows available packages)
+    -o <regex>  only show services that need to restart due to a path matching
+                the regex
 
   By using the following options only the specified checks are performed:
     -k          check for obsolete kernel
@@ -186,7 +188,8 @@ our $opt_q;
 our $opt_t;
 our $opt_u;
 our $opt_w;
-unless(getopts('c:vr:nm:bf:klpqt:u:w')) {
+our $opt_o;
+unless(getopts('c:vr:nm:bf:klpqt:u:wo:')) {
     HELP_MESSAGE;
     exit 1;
 }
@@ -520,6 +523,9 @@ if(defined($opt_l)) {
 
 		    # skip special device paths
 		    next if(scalar grep { $path =~ /$_/; } @{$nrconf{blacklist_mappings}});
+
+		    # if user specified -o, only include mappings that match the regexp
+		    next if($opt_o && $path !~ /$opt_o/);
 
 		    # removed executable mapped files
 		    if($path =~ s/ \(deleted\)$// ||  # Linux
